@@ -5,6 +5,10 @@ from django.shortcuts import get_object_or_404,render
 from django.urls import reverse
 from django.views import generic
 from django.utils import timezone
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+import time
+import urllib
 
 from .models import *
 
@@ -31,6 +35,27 @@ class ResultsView(generic.DetailView):
     model = Question
     template_name = 'polls/results.html'
 
+def crawlFirefox(request, urle):
+    try:
+        urle=urle.replace("diffbot","%")
+        urle=urle.replace("%C2%AC",".")
+        urle=urllib.parse.unquote(urle)
+        options = Options()
+        options.add_argument("--headless")
+        driver = webdriver.Firefox(firefox_options=options)
+        print("Firefox Headless Browser Invoked")
+        driver.get(urle)
+        time.sleep(15)
+        qr=driver.page_source
+        driver.quit()
+        if not qr:
+            raise Http404("crawler did not run!!")
+    
+    except:
+        raise Http404("something is broken!!")
+    
+    finally:
+        return HttpResponse(qr)
 
 def vote(request, question_id):
     question=get_object_or_404(Question,pk=question_id)
